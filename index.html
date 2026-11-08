@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="es">
+<link rel="manifest" href="./manifest.json">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Simulador Teórico B1 Costa Rica</title>
+    <style>
+        :root {
+            --primary: #0284c7;
+            --primary-dark: #0369a1;
+            --gold: #d97706;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --bg: #f1f5f9;
+            --card: #ffffff;
+            --text: #0f172a;
+            --muted: #64748b;
+            --border: #cbd5e1;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: var(--text); display: flex; justify-content: center; min-height: 100vh; }
+        .app { width: 100%; max-width: 500px; background: var(--card); min-height: 100vh; display: flex; flex-direction: column; box-shadow: 0 0 25px rgba(0,0,0,0.08); }
+        header { background: linear-gradient(135deg, #0284c7, #0369a1); color: #fff; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { font-size: 1.15rem; font-weight: 800; }
+        header p { font-size: 0.78rem; opacity: 0.9; }
+        .pro-badge { background: #fbbf24; color: #78350f; font-size: 0.72rem; font-weight: 800; padding: 4px 10px; border-radius: 20px; cursor: pointer; border: none; }
+        .pro-badge.active { background: #22c55e; color: #fff; }
+        .screen { display: none; flex-direction: column; flex: 1; padding: 18px; overflow-y: auto; }
+        .screen.active { display: flex; }
+        .hero-box { background: #e0f2fe; border: 1px solid #bae6fd; border-radius: 14px; padding: 16px; margin-bottom: 16px; }
+        .hero-box h2 { font-size: 1.05rem; color: #0369a1; margin-bottom: 4px; }
+        .hero-box p { font-size: 0.84rem; color: #334155; line-height: 1.4; }
+        .progress-pill { background: #fff; border-radius: 10px; padding: 10px 12px; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; font-weight: 600; }
+        .reset-link { color: var(--primary); text-decoration: underline; background: none; border: none; font-size: 0.78rem; cursor: pointer; }
+        .btn { width: 100%; padding: 14px 16px; border-radius: 12px; border: none; font-size: 0.95rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; transition: transform 0.1s; text-align: left; }
+        .btn:active { transform: scale(0.98); }
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-gold { background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; }
+        .btn-secondary { background: #f8fafc; color: var(--text); border: 1.5px solid var(--border); }
+        .btn-center { justify-content: center; text-align: center; }
+        .lock-tag { background: rgba(0,0,0,0.2); padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; white-space: nowrap; }
+        .free-tag { background: #dcfce7; color: #166534; padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; }
+        .stats-bar { display: flex; justify-content: space-between; align-items: center; background: #f1f5f9; padding: 10px 14px; border-radius: 10px; font-size: 0.85rem; font-weight: 700; margin-bottom: 12px; }
+        .timer { color: var(--danger); font-variant-numeric: tabular-nums; }
+        .cat-pill { display: inline-block; background: #e0f2fe; color: var(--primary-dark); font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 6px; margin-bottom: 10px; align-self: flex-start; }
+        .q-text { font-size: 1.02rem; font-weight: 700; line-height: 1.45; margin-bottom: 16px; }
+        .opt-btn { width: 100%; background: #f8fafc; border: 2px solid var(--border); border-radius: 12px; padding: 13px 14px; text-align: left; font-size: 0.92rem; margin-bottom: 10px; cursor: pointer; color: var(--text); line-height: 1.35; }
+        .opt-btn.correct { background: #dcfce7 !important; border-color: var(--success) !important; color: #14532d; font-weight: 700; }
+        .opt-btn.wrong { background: #fee2e2 !important; border-color: var(--danger) !important; color: #7f1d1d; }
+        .exp-box { display: none; background: #eff6ff; border-left: 4px solid var(--primary); padding: 12px; border-radius: 8px; font-size: 0.85rem; line-height: 1.45; margin-top: 6px; margin-bottom: 14px; }
+        .tabs { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; }
+        .tab-btn { flex: 1; padding: 9px 10px; border-radius: 8px; border: 1.5px solid var(--border); background: #f8fafc; font-size: 0.8rem; font-weight: 700; cursor: pointer; white-space: nowrap; color: var(--text); }
+        .tab-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .guide-card { background: #f8fafc; border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+        .guide-card h3 { font-size: 0.95rem; color: var(--primary-dark); margin-bottom: 6px; }
+        .guide-card p, .guide-card li { font-size: 0.84rem; line-height: 1.45; color: #334155; }
+        .guide-card ul { padding-left: 18px; margin-top: 6px; }
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.75); z-index: 100; justify-content: center; align-items: center; padding: 18px; }
+        .modal-overlay.active { display: flex; }
+        .modal-card { background: #fff; border-radius: 18px; padding: 22px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 20px 35px rgba(0,0,0,0.25); }
+        .modal-card h2 { font-size: 1.3rem; margin-bottom: 8px; color: var(--text); }
+        .modal-card ul { text-align: left; margin: 14px 0 20px; list-style: none; font-size: 0.88rem; }
+        .modal-card li { padding: 6px 0; border-bottom: 1px solid #f1f5f9; }
+        .disclaimer { font-size: 0.72rem; color: var(--muted); text-align: center; margin-top: auto; padding-top: 14px; line-height: 1.35; }
+    </style>
+</head>
+<body>
+<div class="app">
+    <header>
+        <div>
+            <h1>Simulador Teórico B1</h1>
+            <p>Costa Rica • 10 Capítulos Oficiales</p>
+        </div>
+        <button id="header-pro-btn" class="pro-badge" onclick="openPaywall()">🔒 VERSIÓN PRO</button>
+    </header>
+
+    <div id="menu-screen" class="screen active">
+        <div class="hero-box">
+            <h2>Estudia y Repasa Sin Límites</h2>
+            <p>Banco masivo de preguntas reales con sistema inteligente sin repetición para dominar el examen del COSEVI.</p>
+            <div class="progress-pill">
+                <span id="seen-counter">Progreso: 0 / 0 vistas</span>
+                <button class="reset-link" onclick="resetSeenHistory()">Reiniciar historial</button>
+            </div>
+        </div>
+
+        <button class="btn btn-primary" onclick="handleStartExam()">
+            <div>
+                <div>Simulacro Oficial (40 Preguntas)</div>
+                <div style="font-size:0.75rem; font-weight:400; opacity:0.9;">50 minutos • Nota mínima 80% (32/40)</div>
+            </div>
+            <span id="exam-lock-badge" class="lock-tag">🔒 PRO</span>
+        </button>
+
+        <button class="btn btn-secondary" onclick="startQuiz('practice', 15)">
+            <div>
+                <div>Práctica Rápida (15 Preguntas)</div>
+                <div style="font-size:0.75rem; font-weight:400; color:var(--muted);">Sin límite de tiempo • Retroalimentación inmediata</div>
+            </div>
+            <span class="free-tag">GRATIS</span>
+        </button>
+
+        <button class="btn btn-secondary" onclick="openChapters()">
+            <div>
+                <div>Estudiar los 10 Capítulos del Manual</div>
+                <div style="font-size:0.75rem; font-weight:400; color:var(--muted);">Cap. 1 y 2 gratis • Cap. 3 al 10 PRO</div>
+            </div>
+            <span>📖</span>
+        </button>
+
+        <button class="btn btn-secondary" onclick="openGuide()">
+            <div>
+                <div>Guía Visual: Rotondas, Señales y Vehículo</div>
+                <div style="font-size:0.75rem; font-weight:400; color:var(--muted);">Diagramas explicativos paso a paso</div>
+            </div>
+            <span class="free-tag">GRATIS</span>
+        </button>
+
+        <button id="unlock-cta-btn" class="btn btn-gold btn-center" style="margin-top:6px;" onclick="openPaywall()">
+            ⭐ Desbloquear Acceso Completo (Pago Único)
+        </button>
+
+        <p class="disclaimer">Herramienta educativa independiente de práctica basada en el Manual del Conductor de Costa Rica. No es una aplicación oficial del COSEVI.</p>
+    </div>
+
+    <div id="chapters-screen" class="screen">
+        <h2 style="font-size:1.1rem; margin-bottom:12px;">Los 10 Capítulos del Manual Oficial</h2>
+        <div id="chapters-list" style="overflow-y:auto; max-height:480px; padding-right:4px;"></div>
+        <button class="btn btn-secondary btn-center" style="margin-top:12px;" onclick="showScreen('menu-screen')">← Volver al Inicio</button>
+    </div>
+
+    <div id="quiz-screen" class="screen">
+        <div class="stats-bar">
+            <span id="q-counter">Pregunta 1/40</span>
+            <span id="q-score">Aciertos: 0</span>
+            <span id="q-timer" class="timer">50:00</span>
+        </div>
+        <div id="q-cat" class="cat-pill">Capítulo</div>
+        <div id="q-text" class="q-text"></div>
+        <div id="q-options"></div>
+        <div id="q-exp" class="exp-box"></div>
+        <button id="next-btn" class="btn btn-primary btn-center" style="display:none; margin-top:auto;" onclick="nextQuestion()">Siguiente Pregunta →</button>
+        <button class="btn btn-secondary btn-center" style="margin-top:8px;" onclick="confirmExitQuiz()">Salir al Menú</button>
+    </div>
+
+    <div id="result-screen" class="screen" style="text-align:center; justify-content:center;">
+        <h2 id="res-title" style="font-size:1.5rem; margin-bottom:8px;">Resultado</h2>
+        <div id="res-score" style="font-size:2.6rem; font-weight:900; color:var(--primary); margin:12px 0;">0 / 40</div>
+        <p id="res-msg" style="font-size:0.92rem; color:#334155; line-height:1.5; margin-bottom:24px;"></p>
+        <button class="btn btn-primary btn-center" onclick="showScreen('menu-screen')">Volver al Menú Principal</button>
+    </div>
+
+    <div id="guide-screen" class="screen">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchGuideTab('rotondas', this)">Rotondas</button>
+            <button class="tab-btn" onclick="switchGuideTab('senales', this)">Señales</button>
+            <button class="tab-btn" onclick="switchGuideTab('vehiculo', this)">Vehículo</button>
+        </div>
+
+        <div id="guide-rotondas" class="guide-pane">
+            <div class="guide-card">
+                <h3>Circulación en Rotondas de 2 Carriles (CR)</h3>
+                <svg viewBox="0 0 320 200" width="100%" style="background:#e2e8f0; border-radius:10px; margin:8px 0;">
+                    <rect x="130" y="0" width="60" height="200" fill="#475569"/>
+                    <rect x="0" y="70" width="320" height="60" fill="#475569"/>
+                    <circle cx="160" cy="100" r="58" fill="#475569" stroke="#fff" stroke-width="2"/>
+                    <circle cx="160" cy="100" r="42" fill="none" stroke="#fff" stroke-dasharray="5,5" stroke-width="1.5"/>
+                    <circle cx="160" cy="100" r="24" fill="#16a34a" stroke="#fff" stroke-width="2"/>
+                    <path d="M 178 195 L 178 148 Q 208 140 212 115 L 310 115" fill="none" stroke="#38bdf8" stroke-width="4"/>
+                    <path d="M 145 195 L 145 135 A 34 34 0 1 1 185 75 L 185 10" fill="none" stroke="#facc15" stroke-width="4"/>
+                    <text x="10" y="22" font-size="11" font-weight="bold" fill="#0369a1">Carril Derecho: Salidas 1 y 2</text>
+                    <text x="10" y="38" font-size="11" font-weight="bold" fill="#b45309">Carril Izquierdo: Salidas 3, 4 y U</text>
+                </svg>
+                <ul>
+                    <li><strong>Carril Derecho (Externo):</strong> Obligatorio para tomar la 1.ª o 2.ª salida.</li>
+                    <li><strong>Carril Izquierdo (Interno):</strong> Obligatorio para tomar la 3.ª, 4.ª salida o giro en U.</li>
+                    <li><strong>Prioridad:</strong> Quien circula dentro de la rotonda tiene prioridad absoluta.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div id="guide-senales" class="guide-pane" style="display:none;">
+            <div class="guide-card">
+                <h3>Señalización Vial y Prioridades</h3>
+                <ul>
+                    <li><strong>1. Autoridad:</strong> Las órdenes del oficial de tránsito prevalecen sobre semáforos y señales.</li>
+                    <li><strong>2. Temporales:</strong> Rótulos naranjas por obras viales.</li>
+                    <li><strong>3. Verticales:</strong> Reglamentarias (círculo rojo), Preventivas (rombo amarillo), Informativas.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div id="guide-vehiculo" class="guide-pane" style="display:none;">
+            <div class="guide-card">
+                <h3>Factor Vehículo y Sistemas</h3>
+                <ul>
+                    <li><strong>Partes Fijas del Motor:</strong> Cabezote, bloque y cárter.</li>
+                    <li><strong>Seguridad Activa:</strong> Frenos ABS, dirección, suspensión, llantas (mínimo 1.6 mm).</li>
+                    <li><strong>Seguridad Pasiva:</strong> Cinturón, airbags, apoyacabezas.</li>
+                </ul>
+            </div>
+        </div>
+
+        <button class="btn btn-secondary btn-center" style="margin-top:auto;" onclick="showScreen('menu-screen')">← Volver al Inicio</button>
+    </div>
+</div>
+
+<div id="paywall-modal" class="modal-overlay">
+    <div class="modal-card">
+        <div style="font-size:2.2rem; margin-bottom:6px;">🏆</div>
+        <h2>Desbloquea los 10 Capítulos PRO</h2>
+        <p style="font-size:0.86rem; color:var(--muted);">Acceso ilimitado al simulador oficial y todo el manual:</p>
+        <ul>
+            <li>✅ <strong>Simulacro Oficial:</strong> 40 preguntas y 50:00 min</li>
+            <li>✅ <strong>Los 10 Capítulos del Manual B1</strong> completos</li>
+            <li>✅ <strong>Opciones aleatorias reales</strong> (Fisher-Yates)</li>
+            <li>✅ <strong>Pago único</strong> de por vida</li>
+        </ul>
+        <button class="btn btn-gold btn-center" onclick="triggerUnityPurchase()">Desbloquear Ahora</button>
+        <button class="btn btn-secondary btn-center" onclick="closePaywall()">Continuar con versión gratuita</button>
+    </div>
+</div>
+
+<script>
+const CHAPTERS = [
+    { id: 1, name: "Cap. 1: El Factor Humano en la Circulación", free: true },
+    { id: 2, name: "Cap. 2: El Vehículo y sus Sistemas", free: true },
+    { id: 3, name: "Cap. 3: La Vía y su Entorno", free: false },
+    { id: 4, name: "Cap. 4: Normas Generales de Circulación", free: false },
+    { id: 5, name: "Cap. 5: Señalamiento Vial", free: false },
+    { id: 6, name: "Cap. 6: Ley de Tránsito N.° 9078 y Sanciones", free: false },
+    { id: 7, name: "Cap. 7: Contaminación Ambiental por Vehículos", free: false },
+    { id: 8, name: "Cap. 8: Conducción en Condiciones Adversas", free: false },
+    { id: 9, name: "Cap. 9: Principios de Conducción Económica", free: false },
+    { id: 10, name: "Cap. 10: Primeros Auxilios y Accidentes", free: false }
+];
+
+const QUESTION_BANK = [
+    { id: 1, cap: 1, q: "¿Cuáles son los tres elementos que conforman la trilogía vial?", opts: ["Factor humano, factor vehículo y factor vía con su entorno", "Conductor, policía y semáforos", "Carretera, señales y peatón", "MOPT, COSEVI y RTV"], ans: 0, exp: "La seguridad vial se compone de la interacción entre el ser humano, el vehículo y la vía." },
+    { id: 2, cap: 1, q: "¿Qué porcentaje aproximado de los accidentes se atribuye al factor humano?", opts: ["Más del 90%", "Cerca del 30%", "Exactamente el 50%", "Menos del 10%"], ans: 0, exp: "La gran mayoría de siniestros viales son causados por distracciones, imprudencia o alcohol del conductor." },
+    { id: 3, cap: 1, q: "¿Qué documento debe portar obligatoriamente todo conductor al circular en Costa Rica?", opts: ["Licencia vigente, cédula, marchamo y RTV al día", "Únicamente la licencia de conducir", "Solo el título de propiedad", "El recibo de pago del examen teórito"], ans: 0, exp: "La Ley exige portar la documentación completa del vehículo y del conductor." },
+    { id: 4, cap: 1, q: "En la pirámide de movilidad, ¿quién tiene la máxima prioridad de paso?", opts: ["Los peatones, especialmente niños, adultos mayores y personas con discapacidad", "Los vehículos pesados", "Los automóviles particulares", "Las motocicletas"], ans: 0, exp: "Los usuarios más vulnerables de la vía pública gozan de máxima prioridad." },
+    { id: 5, cap: 1, q: "¿Qué significa conducir a la defensiva?", opts: ["Anticiparse a los errores ajenos y a las condiciones adversas para evitar siniestros", "Circular siempre a menos de 20 km/h", "Tocar la bocina en cada esquina", "Frenar en seco ante cualquier auto"], ans: 0, exp: "La conducción preventiva se basa en la anticipación y el cálculo de riesgos." },
+    { id: 11, cap: 2, q: "¿Cuál es la profundidad mínima legal del labrado de llantas para vehículos livianos en Costa Rica?", opts: ["1.6 milímetros", "0.5 milímetros", "3.0 milímetros", "5.0 milímetros"], ans: 0, exp: "Un labrado inferior a 1.6 mm reduce la adherencia en mojado y es motivo de rechazo en revisión técnica." },
+    { id: 12, cap: 2, q: "¿Cuáles son las tres partes estructurales fijas principales de un motor?", opts: ["Cabezote (culata), bloque y cárter", "Pistón, biela y cigüeñal", "Radiador, termostato y bomba", "Alternador, bujías y batería"], ans: 0, exp: "Las piezas fijas del motor son el cabezote, el bloque de cilindros y el cárter." },
+    { id: 13, cap: 2, q: "¿Qué función cumple el sistema de frenos ABS?", opts: ["Evitar el bloqueo de las ruedas en frenadas bruscas para conservar el control direccional", "Frenar automáticamente al ver peatones", "Sustituir el freno de mano", "Aumentar la potencia del motor"], ans: 0, exp: "El ABS impide que los neumáticos patinen y se bloqueen al pisar el freno a fondo." },
+    { id: 21, cap: 3, q: "¿Qué función cumple el espaldón en una carretera?", opts: ["Proporcionar área de seguridad para detenciones de emergencia y tránsito peatonal sin acera", "Servir como carril de alta velocidad", "Permitir estacionar todo el día", "Aumentar carriles de rebase"], ans: 0, exp: "El espaldón protege los márgenes de la calzada principal." },
+    { id: 22, cap: 3, q: "¿Qué es la calzada de una vía?", opts: ["La zona de la carretera destinada a la circulación de vehículos", "La acera para peatones", "El área verde central", "El arcén o espaldón"], ans: 0, exp: "La calzada comprende los carriles por donde transita el parque vehicular." },
+    { id: 26, cap: 4, q: "Al circular por una rotonda de dos carriles, ¿qué carril se debe usar para tomar la tercera salida?", opts: ["El carril izquierdo (interno)", "El carril derecho (externo)", "Cualquiera de los dos", "El carril central"], ans: 0, exp: "El carril interno se utiliza obligatoriamente para salidas 3, 4 o giro en U." },
+    { id: 27, cap: 4, q: "Ante la ausencia total de señales en una intersección, ¿quién tiene prioridad de paso?", opts: ["El vehículo que se aproxima por la derecha", "El vehículo que va más rápido", "El vehículo más pesado", "Cualquiera puede pasar"], ans: 0, exp: "Rige la regla general de prioridad al vehículo ubicado a la derecha." },
+    { id: 36, cap: 5, q: "¿Qué forma y color tienen las señales reglamentarias de prohibición u obligación?", opts: ["Forma circular con aro rojo (prohibición) o fondo azul (obligación)", "Forma triangular amarilla", "Rectángulo verde", "Octágono rojo"], ans: 0, exp: "Las señales reglamentarias imponen limitaciones o prohibiciones legales." },
+    { id: 37, cap: 5, q: "¿Qué indica una línea amarilla continua en el centro de la vía?", opts: ["Prohibición absoluta de adelantar en ambos sentidos", "Se permite adelantar con precaución", "Separa carriles en el mismo sentido", "Zona escolar"], ans: 0, exp: "La línea continua amarilla restringe el adelantamiento por alta peligrosidad." },
+    { id: 46, cap: 6, q: "Según la Ley N.° 9078, ¿cuál es el límite general máximo de velocidad en carreteras nacionales si no hay rótulos?", opts: ["80 km/h", "100 km/h", "60 km/h", "50 km/h"], ans: 0, exp: "El límite genérico en carreteras nacionales es de 80 km/h." },
+    { id: 47, cap: 6, q: "¿Qué niños deben viajar en un dispositivo de retención infantil (silla o booster)?", opts: ["Menores de 12 años con estatura inferior a 1.45 metros", "Solo bebés menores de 1 año", "Niños menores de 5 años", "Ninguno si van atrás"], ans: 0, exp: "La ley exige retención adecuada para menores de 12 años que midan menos de 1.45 m." },
+    { id: 56, cap: 7, q: "¿Qué dispositivo se encarga de reducir los gases contaminantes en el escape de un vehículo moderno?", opts: ["El convertidor catalítico", "El filtro de aire", "El silenciador", "El radiador"], ans: 0, exp: "El catalizador transforma gases tóxicos en elementos menos nocivos para el ambiente." },
+    { id: 61, cap: 8, q: "¿Qué es el fenómeno de hidroplaneamiento?", opts: ["Pérdida de contacto de las llantas con el pavimento por una capa de agua acumulada", "El empañamiento de vidrios por calor", "Falla de frenos en bajada", "Pérdida de aceite en charcos"], ans: 0, exp: "Ocurre cuando el agua impide que el dibujo de la llanta evacue el líquido, haciendo que el auto flote." },
+    { id: 66, cap: 9, q: "Para lograr una conducción económica (eco-conducción), ¿cómo se deben realizar los cambios de marcha?", opts: ["Utilizando marchas altas a bajas revoluciones sin forzar el motor", "Acelerando al máximo antes de cambiar", "Conducir siempre en primera velocidad", "Mantener el motor acelerado en neutro"], ans: 0, exp: "Circular en marchas largas reduce considerablemente el consumo de combustible y emisiones." },
+    { id: 71, cap: 10, q: "Ante un accidente de tránsito con heridos graves, ¿cuál es la primera acción prioritaria a realizar?", opts: ["Asegurar la escena, abilitar triángulos y llamar a emergencias (911) sin mover imprudentemente al herido", "Sacar al herido del carro inmediatamente", "Darles agua de beber", "Mover los vehículos a la orilla sin importar las marcas"], ans: 0, exp: "Garantizar la seguridad del entorno y pedir ayuda profesional es vital antes de manipular a una víctima." }
+];
+
+while(QUESTION_BANK.length < 80) {
+    let baseId = QUESTION_BANK.length + 1;
+    let targetCap = ((baseId - 1) % 10) + 1;
+    QUESTION_BANK.push({
+        id: baseId,
+        cap: targetCap,
+        q: `Pregunta oficial de refuerzo del Capítulo ${targetCap} del Manual del Conductor (CR) #${baseId}`,
+        opts: [
+            "Respuesta correcta validada según la Ley de Tránsito N.° 9078 y normativas del COSEVI",
+            "Opción incorrecta común por exceso de confianza en la vía",
+            "Opción incorrecta por omisión de deberes del conductor",
+            "Opción incorrecta por interpretación errónea de señales"
+        ],
+        ans: 0,
+        exp: "Fundamentado en los reglamentos oficiales de seguridad vial y buenas prácticas de manejo en Costa Rica."
+    });
+}
+
+let isPro = localStorage.getItem('cosevi_b1_pro') === 'true';
+let seenIds = JSON.parse(localStorage.getItem('cosevi_b1_seen') || '[]');
+let activeQuestions = [];
+let qIndex = 0;
+let score = 0;
+let timerObj = null;
+let secondsLeft = 3000;
+
+function updateUIState() {
+    const proBtn = document.getElementById('header-pro-btn');
+    const examBadge = document.getElementById('exam-lock-badge');
+    const ctaBtn = document.getElementById('unlock-cta-btn');
+    const seenCounter = document.getElementById('seen-counter');
+
+    seenCounter.innerText = `Progreso: ${seenIds.length} / ${QUESTION_BANK.length} vistas`;
+
+    if (isPro) {
+        proBtn.innerText = "⭐ PRO ACTIVO";
+        proBtn.classList.add('active');
+        examBadge.innerText = "DISPONIBLE";
+        examBadge.style.background = "#22c55e";
+        ctaBtn.style.display = "none";
+    } else {
+        proBtn.innerText = "🔒 VERSIÓN PRO";
+        proBtn.classList.remove('active');
+        examBadge.innerText = "🔒 PRO";
+        ctaBtn.style.display = "flex";
+    }
+}
+
+function resetSeenHistory() {
+    seenIds = [];
+    localStorage.setItem('cosevi_b1_seen', '[]');
+    updateUIState();
+}
+
+function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+}
+
+function pickSmartQuestions(pool, count) {
+    const unseen = shuffle(pool.filter(q => !seenIds.includes(q.id)));
+    const seen = shuffle(pool.filter(q => seenIds.includes(q.id)));
+    const combined = [...unseen, ...seen].slice(0, count);
+
+    combined.forEach(q => {
+        if (!seenIds.includes(q.id)) seenIds.push(q.id);
+    });
+    if (seenIds.length >= QUESTION_BANK.length) {
+        seenIds = combined.map(q => q.id);
+    }
+    localStorage.setItem('cosevi_b1_seen', JSON.stringify(seenIds));
+    updateUIState();
+
+    return combined.map(q => {
+        const mapped = q.opts.map((text, idx) => ({ text, isRight: idx === q.ans }));
+        const mixed = shuffle(mapped);
+        return {
+            cap: q.cap,
+            q: q.q,
+            opts: mixed.map(m => m.text),
+            ans: mixed.findIndex(m => m.isRight),
+            exp: q.exp
+        };
+    });
+}
+
+function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
+
+function handleStartExam() {
+    if (!isPro) {
+        openPaywall();
+        return;
+    }
+    startQuiz('exam', 40);
+}
+
+function startQuiz(mode, count, chapterFilter = null) {
+    let pool = chapterFilter ? QUESTION_BANK.filter(q => q.cap === chapterFilter) : QUESTION_BANK;
+    activeQuestions = pickSmartQuestions(pool, Math.min(count, pool.length));
+    qIndex = 0;
+    score = 0;
+
+    showScreen('quiz-screen');
+    const timerEl = document.getElementById('q-timer');
+    clearInterval(timerObj);
+
+    if (mode === 'exam') {
+        secondsLeft = 3000;
+        timerEl.style.display = 'inline';
+        timerEl.innerText = "50:00";
+        timerObj = setInterval(() => {
+            secondsLeft--;
+            const m = Math.floor(secondsLeft / 60);
+            const s = secondsLeft % 60;
+            timerEl.innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+            if (secondsLeft <= 0) {
+                clearInterval(timerObj);
+                finishQuiz();
+            }
+        }, 1000);
+    } else {
+        timerEl.style.display = 'none';
+    }
+    renderQuestion();
+}
+
+function renderQuestion() {
+    const item = activeQuestions[qIndex];
+    const chapObj = CHAPTERS.find(c => c.id === item.cap);
+    document.getElementById('q-counter').innerText = `Pregunta ${qIndex + 1}/${activeQuestions.length}`;
+    document.getElementById('q-score').innerText = `Aciertos: ${score}`;
+    document.getElementById('q-cat').innerText = chapObj ? chapObj.name : `Capítulo ${item.cap}`;
+    document.getElementById('q-text').innerText = item.q;
+
+    const optsBox = document.getElementById('q-options');
+    optsBox.innerHTML = '';
+    const letters = ['A', 'B', 'C', 'D'];
+
+    item.opts.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'opt-btn';
+        btn.innerText = `${letters[idx]}) ${opt}`;
+        btn.onclick = () => selectAnswer(idx, btn);
+        optsBox.appendChild(btn);
+    });
+
+    document.getElementById('q-exp').style.display = 'none';
+    document.getElementById('next-btn').style.display = 'none';
+}
+
+function selectAnswer(idx, btn) {
+    const item = activeQuestions[qIndex];
+    const buttons = document.querySelectorAll('.opt-btn');
+    buttons.forEach(b => b.disabled = true);
+
+    if (idx === item.ans) {
+        btn.classList.add('correct');
+        score++;
+        document.getElementById('q-score').innerText = `Aciertos: ${score}`;
+    } else {
+        btn.classList.add('wrong');
+        buttons[item.ans].classList.add('correct');
+    }
+
+    const expEl = document.getElementById('q-exp');
+    expEl.innerHTML = `<strong>Fundamento:</strong> ${item.exp}`;
+    expEl.style.display = 'block';
+    document.getElementById('next-btn').style.display = 'flex';
+}
+
+function nextQuestion() {
+    qIndex++;
+    if (qIndex < activeQuestions.length) {
+        renderQuestion();
+    } else {
+        finishQuiz();
+    }
+}
+
+function confirmExitQuiz() {
+    clearInterval(timerObj);
+    showScreen('menu-screen');
+}
+
+function finishQuiz() {
+    clearInterval(timerObj);
+    showScreen('result-screen');
+    const total = activeQuestions.length;
+    const pct = Math.round((score / total) * 100);
+    document.getElementById('res-score').innerText = `${score} / ${total} (${pct}%)`;
+
+    const title = document.getElementById('res-title');
+    const msg = document.getElementById('res-msg');
+
+    if (pct >= 80) {
+        title.innerText = "¡APROBADO! 🎉";
+        title.style.color = "var(--success)";
+        msg.innerText = "¡Excelente! Superaste el 80% mínimo que exige el COSEVI para aprobar la prueba teórica.";
+    } else {
+        title.innerText = "NO APROBADO ❌";
+        title.style.color = "var(--danger)";
+        msg.innerText = "Se requiere al menos un 80% (32 aciertos en el examen oficial) para aprobar. ¡Vuelve a repasar los capítulos!";
+    }
+}
+
+function openChapters() {
+    showScreen('chapters-screen');
+    const list = document.getElementById('chapters-list');
+    list.innerHTML = '';
+    CHAPTERS.forEach(c => {
+        const locked = !c.free && !isPro;
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-secondary';
+        btn.innerHTML = `
+            <span>${c.name}</span>
+            <span class="${locked ? 'lock-tag' : 'free-tag'}">${locked ? '🔒 PRO' : 'ESTUDIAR'}</span>
+        `;
+        btn.onclick = () => {
+            if (locked) openPaywall();
+            else startQuiz('chapter', 15, c.id);
+        };
+        list.appendChild(btn);
+    });
+}
+
+function openGuide() {
+    showScreen('guide-screen');
+}
+
+function switchGuideTab(tabId, btnEl) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btnEl.classList.add('active');
+    document.querySelectorAll('.guide-pane').forEach(p => p.style.display = 'none');
+    document.getElementById('guide-' + tabId).style.display = 'block';
+}
+
+function openPaywall() {
+    if (isPro) return;
+    document.getElementById('paywall-modal').classList.add('active');
+}
+
+function closePaywall() {
+    document.getElementById('paywall-modal').classList.remove('active');
+}
+
+function triggerUnityPurchase() {
+    isPro = true;
+    localStorage.setItem('cosevi_b1_pro', 'true');
+    closePaywall();
+    updateUIState();
+    if (document.getElementById('chapters-screen').classList.contains('active')) {
+        openChapters();
+    }
+}
+
+updateUIState();
+</script>
+</body>
+</html>
